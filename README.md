@@ -1,11 +1,11 @@
-# Databehandling-AI22
+# AI24-Databehandling
 
 This is a course with focus of learning concepts in data analysis. All lecture codes and exercises can be found in the course [Github repo][ghr].
 
-[ghr]: https://github.com/kokchun/Databehandling-AI22
+[ghr]: https://github.com/pr0fez/AI24-Databehandling
 
-- [Class schedule](https://github.com/kokchun/Databehandling-AI22/blob/main/Schedule_Databehandling_AI22.md)
-- [Resources](https://github.com/kokchun/Databehandling-AI22/tree/main/Resources)
+- [Class schedule](https://github.com/pr0fez/AI24-Databehandling/blob/main/Schedule_Databehandling_AI22.md)
+- [Resources](https://github.com/pr0fez/AI24-Databehandling/tree/main/Resources)
 
 ---
 
@@ -19,11 +19,11 @@ This is a course with focus of learning concepts in data analysis. All lecture c
 | [46][week4] | GDPR, datavisualisation UX, callbacks, bootstrap, deployment **project**             |
 | [47][week5] | **project**, **seminar**                                                             |
 
-[week1]: https://github.com/kokchun/Databehandling-AI22/blob/main/Resources/week1.md
-[week2]: https://github.com/kokchun/Databehandling-AI22/blob/main/Resources/week2.md
-[week3]: https://github.com/kokchun/Databehandling-AI22/blob/main/Resources/week3.md
-[week4]: https://github.com/kokchun/Databehandling-AI22/blob/main/Resources/week4.md
-[week5]: https://github.com/kokchun/Databehandling-AI22/blob/main/Resources/week5.md
+[week1]: https://github.com/pr0fez/AI24-Databehandling/blob/main/Resources/week1.md
+[week2]: https://github.com/pr0fez/AI24-Databehandling/blob/main/Resources/week2.md
+[week3]: https://github.com/pr0fez/AI24-Databehandling/blob/main/Resources/week3.md
+[week4]: https://github.com/pr0fez/AI24-Databehandling/blob/main/Resources/week4.md
+[week5]: https://github.com/pr0fez/AI24-Databehandling/blob/main/Resources/week5.md
 
 ---
 
