@@ -5,6 +5,8 @@ from dash import html, dcc
 from dash.dependencies import Output, Input
 import plotly_express as px
 from dateutil.relativedelta import relativedelta
+import pandas as pd
+from functools import cache
 
 path = os.path.join(os.path.dirname(__file__), "../../Data/Stocksdata")
 
@@ -30,6 +32,8 @@ app.layout = html.Div([
     html.P("Choose a stock"),
     dcc.Dropdown(id='stock-picker-dropdown', className='', options=stock_options,
                  value='AAPL', placeholder="Apple"),
+    html.P(id="highest-value"),
+    html.P(id="lowest-value"),
     dcc.RadioItems(id="ohlc-radio", className='',
                    options=ohlc_options,
                    value='close'),
@@ -39,27 +43,48 @@ app.layout = html.Div([
                max=5,
                step=None,
                value=2,
-               marks=slider_marks)
+               marks=slider_marks),
+    dcc.Store(id="filtered-df")
 ])
 
+@app.callback(Output("filtered-df", "data"),
+              Input("stock-picker-dropdown","value"),
+              Input("time-slider", "value"))
+def filter_df(stock, time_index):
+    dff_daily, dff_intraday = df_dict[stock]
+    
+    dff = dff_intraday if time_index < 2 else dff_daily
+    
+    days = {i: day for i, day in enumerate([1,7,90,365,365*5])}
+    
+    dff = dff if time_index == 5 else filter_time(dff, days=days[time_index])
+
+    return dff.to_json()
 
 @app.callback(
     Output("stock-graph", "figure"),
+    Input("filtered-df", "data"),
     Input("stock-picker-dropdown", "value"),
     Input("ohlc-radio", "value"),
-    Input("time-slider", "value")
 )
-def update_graph(stock, ohlc, time_index):
-    df_daily, df_intraday = df_dict[stock]
-    
-    df = df_intraday if time_index < 2 else df_daily
-    
-    days = {i: day for i, day in enumerate([1,7,90,365,365*5])}
-
-    df = df if time_index == 5 else filter_time(df, days=days[time_index])
+def update_graph(json_df, stock, ohlc):
+       
+    df = pd.read_json(json_df)
 
     fig = px.line(df, x=df.index, y=ohlc, title=stock_dict[stock])
     return fig
+
+@app.callback(Output("highest-value", "children"),
+              Output("lowest-value", "children"),
+              Input("filtered-df", "data"),
+              Input("ohlc-radio", "value")
+)
+def highest_lowest_value(json_df, ohlc):
+    dff = pd.read_json(json_df)
+    highest_value = f"Highest value {dff[ohlc].max()}"
+    lowest_value = f"Highest value {dff[ohlc].min()}"
+    return highest_value, lowest_value
+
 
 def filter_time(df, days=0):
     last_day = df.index[0].date()
