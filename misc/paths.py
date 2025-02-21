@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import os
 import pandas as pd 
 
@@ -19,3 +20,17 @@ print(data_folder)
 df.to_csv(os.path.join(data_folder, "test.csv"))
 
 # print(os.path.abspath(""))
+=======
+#%%
+import os 
+import pandas as pd 
+data_folder = os.path.abspath("../Data")
+
+calories_path = os.path.join(data_folder, "calories.xlsx")
+
+
+pd.read_excel(calories_path)
+
+
+#%%
+>>>>>>> upstream/main
