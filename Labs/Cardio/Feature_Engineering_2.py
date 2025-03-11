@@ -33,6 +33,13 @@ def blood_pressure(df):
     outlier2 = df[(df['ap_hi'] > 170) | (df['ap_hi'] < 88)]
     df = df.drop(index=[*outlier1.index,*outlier2.index])
 
+    #fig, axes = plt.subplots(1,2)
+    #df['ap_lo'].hist(ax=axes[0], bins=100)
+    #df['ap_hi'].hist(ax=axes[1], bins=100)
+    #axes[0].boxplot(df['ap_lo'])
+    #axes[1].boxplot(df['ap_hi'])
+    #plt.show()
+
     #Gränserna för varje kategori läser jag av från tabellen given genom att göra en funktion med alla dess intervall och logiska uttryck
     def blood_category(hi, lo):
         if hi < 120 and lo < 80:
@@ -48,18 +55,11 @@ def blood_pressure(df):
     
     df['blood_pressure'] = df.apply(lambda row: blood_category(row['ap_hi'], row['ap_lo']), axis=1)
 
-    
-    #fig, axes = plt.subplots(1,2)
-    #df['ap_lo'].hist(ax=axes[0], bins=100)
-    #df['ap_hi'].hist(ax=axes[1], bins=100)
-    #axes[0].boxplot(df['ap_lo'])
-    #axes[1].boxplot(df['ap_hi'])
-    #plt.show()
     return df
 
-print(len(df))
+
 df = BMI_features(df)
 df = blood_pressure(df)
-print(len(df))
-print(df[df['blood_pressure'] == 'Healthy'])
+df.to_csv('Labs/Cardio/revised_data.csv')
+
 
