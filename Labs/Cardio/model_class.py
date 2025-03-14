@@ -2,6 +2,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.preprocessing import StandardScaler, Normalizer
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
 
 
 
@@ -9,6 +10,7 @@ class model_selection:
     def __init__(self, X, y, autoscale=True, autosplit=True):
         self.X = X
         self.y = y
+        self.run = False #Låser upp andra funktioner om GridCV_pipeline_fit är exekverad
         if autoscale == True:
             self.standard_normal_scaling()
         if autosplit == True:
@@ -32,7 +34,7 @@ class model_selection:
         ])
 
         # Kör GridSearchCV
-        self.grid_search = GridSearchCV(self.pipeline, param_grid, cv=5, scoring='accuracy', verbose=5)
+        self.grid_search = GridSearchCV(self.pipeline, param_grid, cv=5, scoring='accuracy', verbose=1)
         self.grid_search.fit(self.X_train, self.y_train)
 
         # Visa bästa modellen och dess hyperparametrar
@@ -43,6 +45,31 @@ class model_selection:
         if self.run == False:
             raise ValueError('GridCV_pipeline_fit method must be executed first')
         self.y_hat = self.grid_search.predict(self.X_test)
+        self.score = classification_report(self.y_test, self.y_hat)
+        self.cm = confusion_matrix(self.y_test, self.y_hat)
+        print(self.score)
+        ConfusionMatrixDisplay(self.cm).plot()
+    
+    def get_all_best_params(self):
+        if self.run == False:
+            raise ValueError('GridCV_pipeline_fit method must be executed first')
+        lst_params = self.grid_search.cv_results_['params']
+        lst_scores = self.grid_search.cv_results_['mean_test_score']
+        score_index = 0
+        output = list()
+        active = lst_params[0]
+        for index, param in enumerate(lst_params):
+            if active['classifier'] != param['classifier']:
+                output.append(f"{active}, score: {lst_scores[score_index]}\n")
+                active = param
+                score_index = index
+            else:
+                if lst_scores[score_index] < lst_scores[index]:
+                    score_index = index
+                    active = param
+        
+        output.append(f"{active}, score: {lst_scores[score_index]}\n")
+        return ''.join(output)
 
 
 
