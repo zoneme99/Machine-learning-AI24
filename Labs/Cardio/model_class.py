@@ -1,5 +1,5 @@
 from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.preprocessing import StandardScaler, Normalizer
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
@@ -19,7 +19,7 @@ class model_selection:
     def standard_normal_scaling(self):
         S_scaler = StandardScaler()
         self.X = S_scaler.fit_transform(self.X)
-        N_scaler = Normalizer()
+        N_scaler = MinMaxScaler()
         self.X = N_scaler.fit_transform(self.X)
 
 
