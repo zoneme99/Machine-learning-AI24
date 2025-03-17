@@ -51,6 +51,7 @@ class model_selection:
         ConfusionMatrixDisplay(self.cm).plot()
     
     def get_all_best_params(self):
+        #Loopar igenom alla modeller och tar fram de bästa parametrar för respektive modell
         if self.run == False:
             raise ValueError('GridCV_pipeline_fit method must be executed first')
         lst_params = self.grid_search.cv_results_['params']
