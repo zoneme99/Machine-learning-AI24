@@ -28,21 +28,23 @@ def create_matrix():
         #Konkatinera
         movies = csr_matrix(movies.values)
         sparse = hstack([movies, scaled_rating])
-        return sparse
+        return sparse, refined_ratings.index
 
     
-    def refine_tags():
+    def refine_tags(notags):
         tags = pd.read_csv('Labs/Film/ml-latest/tags.csv')
         tags = tags.drop(columns=['userId', 'timestamp'])
         tags = tags.dropna()
         tags['tag'] = tags['tag'].apply(lambda x: str(x))
         grouped_tags = tags.groupby('movieId')['tag'].agg(' '.join)
+        print(len(notags.difference(grouped_tags.index)))
+        exit()
         vector = TfidfVectorizer()
         tag_vectorized = vector.fit_transform(grouped_tags)
         return tag_vectorized
     
-    part1 = refine_movies_ratings()
-    part2 = refine_tags()
+    part1, notags = refine_movies_ratings()
+    part2 = refine_tags(notags)
     print(part1.shape, part2.shape)
     exit()
     return hstack([part1, part2])
