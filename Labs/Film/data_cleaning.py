@@ -4,6 +4,7 @@ from functools import cache
 import numpy as np
 from scipy.sparse import csr_matrix, hstack
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+import scipy as sp
 
 @cache
 def create_matrix():
@@ -27,30 +28,29 @@ def create_matrix():
         scaled_rating = min_scaler.fit_transform(scaled_rating)
         #Konkatinera
         movies = csr_matrix(movies.values)
-        sparse = hstack([movies, scaled_rating])
-        return sparse, refined_ratings.index
+        return movies, scaled_rating, refined_ratings.index
 
     
-    def refine_tags(notags):
+    def refine_tags(ratings):
         tags = pd.read_csv('Labs/Film/ml-latest/tags.csv')
         tags = tags.drop(columns=['userId', 'timestamp'])
         tags = tags.dropna()
         tags['tag'] = tags['tag'].apply(lambda x: str(x))
         grouped_tags = tags.groupby('movieId')['tag'].agg(' '.join)
-        print(len(notags.difference(grouped_tags.index)))
-        exit()
+        tags_ratings = grouped_tags[grouped_tags.index.isin(ratings)] # Filmer med tags och ratings
+        no_tag = ratings.difference(tags_ratings.index) # Filmer utan några taggar
+        for index in no_tag:
+            tags_ratings.loc[index] = '' #Fyller alla filmer med inga taggar till tomma strings, detta för att få lika stor mängd datapunkter i movies och tags (Dock lite beräkningstung, men ska bara köras en gång)
         vector = TfidfVectorizer()
-        tag_vectorized = vector.fit_transform(grouped_tags)
+        tag_vectorized = vector.fit_transform(tags_ratings)
         return tag_vectorized
     
-    part1, notags = refine_movies_ratings()
-    part2 = refine_tags(notags)
-    print(part1.shape, part2.shape)
-    exit()
-    return hstack([part1, part2])
+    movies, ratings, rating_index = refine_movies_ratings()
+    tags = refine_tags(rating_index)
+    ratings = csr_matrix(ratings) # alla ska vara csr-matriser
+    return hstack([movies, ratings, tags])
     
-#def model_selection(df):
-
 
 matrix = create_matrix()
-print(matrix)
+print("Done")
+sp.sparse.save_npz('Labs/Film/matrix.npz', matrix)
