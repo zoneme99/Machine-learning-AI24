@@ -2,27 +2,26 @@ import pandas as pd
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
+from sklearn.metrics.pairwise import cosine_similarity
+
+class_index = pd.read_csv('Labs/Film/class_index.csv', index_col=0)
+links = pd.read_csv('Labs/Film/ml-latest/links.csv', index_col='movieId')
+matrix = sp.sparse.load_npz('Labs/Film/matrix.npz')
 # Exempel-DataFrame
+def retrieve_recommendations(class_index, links, matrix):
 
-# Direkt modifiering av underliggande NumPy-array (snabbare än loc)
 
+    serie = pd.Series(cosine_similarity(matrix, matrix.getrow(248)).reshape(-1))
+    serie = serie.sort_values(ascending=False)
+    recommended_movies = serie.iloc[1:6]
 
-#movies = pd.read_csv('Labs/Film/ml-latest/movies.csv', index_col='movieId')
-#ratings = pd.read_csv('Labs/Film/ml-latest/ratings.csv', index_col='movieId')
-tags = pd.read_csv('Labs/Film/ml-latest/tags.csv', index_col='movieId')
-matrix = sp.sparse.load_npz('Labs/Film/matrix.npz',)
-#row = matrix.indptr
-#col = matrix.indices
-#data = matrix.data
-woody = tags.loc[1]
-#woody.hist()
-#plt.show()
-print(woody.groupby('tag').size())
+    for id in recommended_movies.index:
+        urlnum = str(*links['imdbId'].loc[class_index.loc[id]].values)
+        if len(urlnum) != 7:
+            diff = 7 - len(urlnum)
+            urlnum = diff*'0' + urlnum
+        print(f'https://www.imdb.com/title/tt{urlnum}')
 
-def test():
-    row = matrix.toarray()[1]
-    count = 0
-    for num in row:
-        if num != 0:
-            count += 1
-    print(count)
+#retrieve_recommendations()
+
+print(matrix.getrow(0))

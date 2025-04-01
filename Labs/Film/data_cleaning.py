@@ -41,16 +41,18 @@ def create_matrix():
         no_tag = ratings.difference(tags_ratings.index) # Filmer utan några taggar
         for index in no_tag:
             tags_ratings.loc[index] = '' #Fyller alla filmer med inga taggar till tomma strings, detta för att få lika stor mängd datapunkter i movies och tags (Dock lite beräkningstung, men ska bara köras en gång)
+        y = pd.Series(tags_ratings.index)
         vector = TfidfVectorizer()
         tag_vectorized = vector.fit_transform(tags_ratings)
-        return tag_vectorized
+        return tag_vectorized, y
     
     movies, ratings, rating_index = refine_movies_ratings()
-    tags = refine_tags(rating_index)
+    tags, y = refine_tags(rating_index)
     ratings = csr_matrix(ratings) # alla ska vara csr-matriser
-    return hstack([movies, ratings, tags])
+    return hstack([movies, ratings, tags]), y
     
 
-matrix = create_matrix()
+matrix, y = create_matrix()
 print("Done")
 sp.sparse.save_npz('Labs/Film/matrix.npz', matrix)
+y.to_csv('Labs/Film/class_index.csv')
