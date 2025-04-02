@@ -60,11 +60,12 @@ def create_matrix():
     
     movies, ratings, rating_index = refine_movies_ratings()
     tags, y = refine_tags(rating_index)
-    ratings = csr_matrix(ratings) # alla ska vara csr-matriser
-    return hstack([movies, ratings, tags]), y
+    ratings = csr_matrix(ratings)
+    return hstack([movies, tags]), y, ratings
     
 
-matrix, y = create_matrix()
+matrix, y, ratings = create_matrix()
 print("Done")
 sp.sparse.save_npz('Labs/Film/matrix.npz', matrix)
 y.to_csv('Labs/Film/class_index.csv')
+sp.sparse.save_npz('Labs/Film/ratings.npz', matrix)
