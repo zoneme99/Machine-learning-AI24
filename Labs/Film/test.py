@@ -11,12 +11,11 @@ matrix = sp.sparse.load_npz('Labs/Film/matrix.npz')
 movies = pd.read_csv('Labs/Film/ml-latest/movies.csv')
 # Exempel-DataFrame
 def retrieve_recommendations(class_index, links, matrix):
+    serie = pd.Series(cosine_similarity(matrix, matrix[1166]).reshape(-1))
+    serie = serie.sort_values(ascending=False)
 
-
-    serie = pd.Series(cosine_similarity(matrix, matrix.getrow(257)).reshape(-1))
-    serie = serie.sort_values(ascending=True)
-    recommended_movies = serie.iloc[1:6]
-    print(matrix.getrow(recommended_movies.index[0]))
+    #recommended_movies = serie.iloc[1:6]
+    print(serie.min(), serie.max(), serie.sort_index().iloc[257])
     exit()
     for id in recommended_movies.index:
         urlnum = str(*links['imdbId'].loc[class_index.loc[id]].values)
@@ -26,5 +25,6 @@ def retrieve_recommendations(class_index, links, matrix):
         print(f'https://www.imdb.com/title/tt{urlnum}')
 
 retrieve_recommendations(class_index, links, matrix)
-
+# print(matrix.getrow(257))
+# print(matrix.getrow(52297))
 #257 new hope, 1166 empire strikes back
