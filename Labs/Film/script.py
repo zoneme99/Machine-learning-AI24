@@ -1,4 +1,3 @@
-from functools import cache
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity, euclidean_distances
@@ -6,9 +5,9 @@ import numpy as np
 
 movies_path = 'Labs/Film/ml-latest/movies.csv'
 tags_path = 'Labs/Film/ml-latest/tags.csv'
+ratings_path = 'Labs/Film/ml-latest/ratings.csv'
 links = pd.read_csv('Labs/Film/ml-latest/links.csv', index_col='movieId')
 
-@cache
 def create_matrix(m_path, t_path):
     movies = pd.read_csv(m_path, index_col='movieId')
     tags = pd.read_csv(t_path)
@@ -28,13 +27,22 @@ def create_matrix(m_path, t_path):
     tag_vector = vector.fit_transform(all_tags)
     return tag_vector, all_tags.index, movies
 
+
+def create_ratings(path, movie_index):
+    ratings = pd.read_csv(path)
+    print(ratings.shape)
+    ratings = ratings.drop(ratings.index.difference(movie_index))
+    print(ratings.shape)
+    print(len(movie_index))
+
+
 def translate(index, id, links, get_link=False):
     if get_link:
         urlnum = str(links['imdbId'][index[id]])
         if len(urlnum) != 7:
             diff = 7 - len(urlnum)
             urlnum = diff*'0' + urlnum
-        print(f'https://www.imdb.com/title/tt{urlnum}')
+        return f'https://www.imdb.com/title/tt{urlnum}'
     else:
         return index.get_loc(id)
 
@@ -58,15 +66,20 @@ def recommend_movies(tag_vector, index, movie_id, links):
         serie = pd.Series(euclidean_distances(tag_vector, tag_vector.getrow(matrix_index)).reshape(-1))
         serie = serie.sort_values(ascending=True)
         recommended_movies = serie.iloc[1:7]
-    
+    urls = list()
     for id in recommended_movies.index:
-        translate(index, id, links, get_link=True)
+        urls.append(translate(index, id, links, get_link=True))
+    return urls
 
+if __name__ == "__main__":
+    
+    
 
-tag_vector, index, movies = create_matrix(movies_path,tags_path)
-movie_id = [260,1196,122886] #New Hope, empire, force awakens
-recommend_movies(tag_vector, index, movie_id, links)
-#förväntat 0076759
+    tag_vector, index, movies = create_matrix(movies_path,tags_path)
+    create_ratings(ratings_path, index)
+    exit()
+    movie_id = [260,1196,122886] #New Hope, empire, force awakens
+    url_list = recommend_movies(tag_vector, index, movie_id, links)
 
 
 
