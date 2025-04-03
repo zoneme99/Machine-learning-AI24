@@ -1,7 +1,7 @@
 from functools import cache
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.metrics.pairwise import cosine_similarity, euclidean_distances
 import numpy as np
 
 movies_path = 'Labs/Film/ml-latest/movies.csv'
@@ -39,26 +39,33 @@ def translate(index, id, links, get_link=False):
         return index.get_loc(id)
 
 def recommend_movies(tag_vector, index, movie_id, links):
-    print(index.index(movie_id))
-    exit()
-    matrix = np.asarray(tag_vector.todense())
-    serie = pd.Series(cosine_similarity(matrix, matrix[index.loc[movie_id]]).reshape(-1))
-    serie = serie.sort_values(ascending=False)
-
-    recommended_movies = serie.iloc[1:6]
+    if len(movie_id) > 1:
+        matrix_index = translate(index, movie_id[0], links)
+        serie = pd.Series(euclidean_distances(tag_vector, tag_vector.getrow(matrix_index)).reshape(-1))
+        for id in movie_id[1:]:
+            matrix_index = translate(index, id, links)
+            tmp = pd.Series(euclidean_distances(tag_vector, tag_vector.getrow(matrix_index)).reshape(-1))
+            serie = serie + tmp
+        matrix_index = list()
+        for id in movie_id:
+            matrix_index.append(translate(index, id, links))
+        serie.drop(index=matrix_index, inplace=True)
+        serie = serie.sort_values(ascending=True)
+        recommended_movies = serie.iloc[:6]
+        
+    else:
+        matrix_index = translate(index, movie_id, links)
+        serie = pd.Series(euclidean_distances(tag_vector, tag_vector.getrow(matrix_index)).reshape(-1))
+        serie = serie.sort_values(ascending=True)
+        recommended_movies = serie.iloc[1:7]
+    
     for id in recommended_movies.index:
-        urlnum = str(*links['imdbId'].loc[index.loc[id]].values)
-        if len(urlnum) != 7:
-            diff = 7 - len(urlnum)
-            urlnum = diff*'0' + urlnum
-        print(f'https://www.imdb.com/title/tt{urlnum}')
-    #257 new hope, 1166 empire strikes back
+        translate(index, id, links, get_link=True)
+
 
 tag_vector, index, movies = create_matrix(movies_path,tags_path)
-movie_id = 260 #New Hope
-#recommend_movies(tag_vector, index, movie_id, links)
-id_index = translate(index, movie_id, links)
-translate(index, id_index, links, get_link=True)
+movie_id = [260,1196,122886] #New Hope, empire, force awakens
+recommend_movies(tag_vector, index, movie_id, links)
 #förväntat 0076759
 
 
