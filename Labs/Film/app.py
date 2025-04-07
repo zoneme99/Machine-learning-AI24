@@ -17,6 +17,8 @@ tags_path = 'Labs/Film/ml-latest/tags.csv'
 ratings_path = 'Labs/Film/ml-latest/ratings.csv'
 links = pd.read_csv('Labs/Film/ml-latest/links.csv', index_col='movieId')
 
+movie_obj = movie_recommendation(movies_path, tags_path, links)
+
 templates = [
     "bootstrap",
     "minty",
@@ -34,38 +36,23 @@ load_figure_template(template)
 
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.layout = dbc.Container([dcc.Dropdown(df.columns, 'gdpPercap', id='xaxis-column'),
-                            dcc.Dropdown(df.columns, 'lifeExp', id='yaxis-column'),
-                            dcc.Graph(id='graph')])
+app.layout = dbc.Container([dcc.Dropdown(movie_obj.movies['title'], id='mov1'),
+                            dcc.Dropdown(movie_obj.movies['title'], id='mov2'),
+                            html.Div(id='pics')])
 
 
 @callback(
-    Output('graph', 'figure'),
-    Input('xaxis-column', 'value'),
-    Input('yaxis-column', 'value'))
+    Output('pics', 'children'),
+    Input('mov1', 'value'),
+    Input('mov2', 'value'))
 
-def update_graph(xaxis_column_name, yaxis_column_name):
+def update_graph(movie1, movie2):
     
 
-    figure = px.scatter(
-        df.query("year==2007"),
-        x=xaxis_column_name,
-        y=yaxis_column_name,
-        size="pop",
-        color="continent",
-        log_x=True,
-        size_max=60,
-        template=template,
-        title="Gapminder 2007: '%s' theme" % template,
-    )
-
-
-
-    return figure
+    return f'first movie {movie1} and second movie {movie2}'
 
 
 if __name__ == "__main__":
-    #app.run(debug=True)
-    movie_obj = movie_recommendation(movies_path, tags_path, links)
-    print(movie_obj.get_movies([260, 1196]))
+    app.run(debug=True)
+    #print(movie_obj.get_movies([260, 1196]))
     
