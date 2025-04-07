@@ -1,7 +1,8 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import euclidean_distances
-
+from bs4 import BeautifulSoup
+import requests
 
 class movie_recommendation:
     def __init__(self, movie_path, tags_path, links_df):
@@ -20,7 +21,10 @@ class movie_recommendation:
         #Städar taggarna
         tags = tags.drop(columns=['userId', 'timestamp'])
         tags = tags.dropna()
-        tags = tags.drop_duplicates('tag')
+        tags = tags.drop_duplicates()
+        tag_counts = tags['tag'].value_counts()
+        tags_to_keep = tag_counts[tag_counts > 1].index # Tar bort unika tags, kan ej jämföras
+        tags = tags[tags['tag'].isin(tags_to_keep)]
         tags['tag'] = tags['tag'].apply(lambda x: str(x))
         grouped_tags = tags.groupby('movieId')['tag'].agg(' '.join)
         #Städar movies genres
@@ -60,6 +64,7 @@ class movie_recommendation:
             recommended_movies = serie.iloc[:6]
             
         else:
+            movie_id = int(*movie_id)
             matrix_index = self.translate(index, movie_id, links)
             serie = pd.Series(euclidean_distances(tag_vector, tag_vector.getrow(matrix_index)).reshape(-1))
             serie = serie.sort_values(ascending=True)
@@ -77,6 +82,21 @@ class movie_recommendation:
         ratings['mean'].to_csv('Labs/Film/ratings.py')
 
 
+def get_imdb_image(url):
+    if url == None:
+        return url
+    headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
+                  '(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+    }
+    response = requests.get(url, headers=headers)
+    html_text = response.text
+
+    soup = BeautifulSoup(html_text, 'html.parser')
+    element = soup.find(class_='ipc-media')
+    img = element.find('img')
+        
+    return img['src']
 
 
 
