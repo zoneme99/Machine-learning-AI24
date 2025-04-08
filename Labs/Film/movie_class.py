@@ -9,9 +9,9 @@ class movie_recommendation:
         self.tag_vector, self.index, self.movies = self.create_matrix(movie_path, tags_path)
         self.links = links_df
 
-    def get_movies(self, movie_list):
+    def get_movies(self, movie_list, rate_index):
         if type(movie_list) == list:
-            return self.recommend_movies(self.tag_vector, self.index, movie_list, self.links)
+            return self.recommend_movies(self.tag_vector, self.index, movie_list, self.links, rate_index)
         else:
             raise ValueError('movie_list must be a list')
 
@@ -48,7 +48,7 @@ class movie_recommendation:
         else:
             return index.get_loc(id)
 
-    def recommend_movies(self, tag_vector, index, movie_id, links):
+    def recommend_movies(self, tag_vector, index, movie_id, links, rate_index):
         if len(movie_id) > 1:
             matrix_index = self.translate(index, movie_id[0], links)
             serie = pd.Series(euclidean_distances(tag_vector, tag_vector.getrow(matrix_index)).reshape(-1))
@@ -60,6 +60,7 @@ class movie_recommendation:
             for id in movie_id:
                 matrix_index.append(self.translate(index, id, links))
             serie.drop(index=matrix_index, inplace=True)
+            serie = serie[serie.index.isin([index.get_loc(x) for x in rate_index])]
             serie = serie.sort_values(ascending=True)
             recommended_movies = serie.iloc[:6]
             
@@ -67,19 +68,23 @@ class movie_recommendation:
             movie_id = int(*movie_id)
             matrix_index = self.translate(index, movie_id, links)
             serie = pd.Series(euclidean_distances(tag_vector, tag_vector.getrow(matrix_index)).reshape(-1))
+            serie.drop(index=self.translate(index, movie_id, links), inplace=True)
+            serie = serie[serie.index.isin([index.get_loc(x) for x in rate_index])]
             serie = serie.sort_values(ascending=True)
-            recommended_movies = serie.iloc[1:7]
+            recommended_movies = serie.iloc[:6]
         urls = list()
         for id in recommended_movies.index:
             urls.append(self.translate(index, id, links, get_link=True))
+        while len(urls) < 5:
+            urls.append(None)
         return urls
     
-    def create_ratings(path, movie_index):
+    def create_ratings(self, path):
         ratings = pd.read_csv(path)
         ratings = ratings.groupby('movieId')['rating'].agg(['count', 'mean'])
-        ratings = ratings[ratings['count'] < 25] #Ta bort avvikelser, tex. 1 review som ger 5.0 rating
-        ratings = ratings[ratings.index.isin(movie_index)]
-        ratings['mean'].to_csv('Labs/Film/ratings.py')
+        ratings = ratings[ratings['count'] > 25] #Ta bort avvikelser, tex. 1 review som ger 5.0 rating
+        ratings = ratings[ratings.index.isin(self.index)]
+        ratings['mean'].to_csv('Labs/Film/ratings.csv')
 
 
 def get_imdb_image(url):
@@ -98,5 +103,11 @@ def get_imdb_image(url):
         
     return img['src']
 
+if __name__ == "__main__":
+    movies_path = 'Labs/Film/ml-latest/movies.csv'
+    tags_path = 'Labs/Film/ml-latest/tags.csv'
+    links = pd.read_csv('Labs/Film/ml-latest/links.csv', index_col='movieId')
 
+    movie_obj = movie_recommendation(movies_path, tags_path, links)
+    movie_obj.create_ratings('Labs/Film/ml-latest/ratings.csv')
 

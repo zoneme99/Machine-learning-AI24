@@ -14,10 +14,9 @@ import pandas as pd
 
 movies_path = 'Labs/Film/ml-latest/movies.csv'
 tags_path = 'Labs/Film/ml-latest/tags.csv'
-ratings_path = 'Labs/Film/ml-latest/ratings.csv'
 links = pd.read_csv('Labs/Film/ml-latest/links.csv', index_col='movieId')
-
 movie_obj = movie_recommendation(movies_path, tags_path, links)
+ratings = pd.read_csv('Labs/Film/ratings.csv', index_col='movieId')
 
 templates = [
     "bootstrap",
@@ -36,14 +35,40 @@ load_figure_template(template)
 
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.layout = dbc.Container([html.H2(children='Submit your favourite movies from 1 to 5 movies!\n AI will recommend movies based of those movies!(Write in dropdown menu to get available movies)',
-                            style={'width': '100%'}),
+app.layout = dbc.Container([dcc.Markdown(f'''
+                                         # Submit your favourite movies from 1 to 5 movies!
+                                         
+                                        ## AI will recommend movies based of those movies!
+                                         - Write in dropdown menu to get available movies
+                                         - Filter movies by choosing comparison symbol and prefered rating from {ratings['mean'].min():.2f} to {ratings['mean'].max():.2f}
+                                         - Symbols: ALL - all movies considered, < - less than rating number, > - greater than rating number
+                                         - Rating number: Any decimal number between interval'''),
                             dcc.Dropdown(id='mov1'),
                             dcc.Dropdown(id='mov2'),
                             dcc.Dropdown(id='mov3'),
                             dcc.Dropdown(id='mov4'),
                             dcc.Dropdown(id='mov5'),
-                            html.Button('Submit', id='submit-val', n_clicks=0),
+                            html.Div(
+                            [dcc.Dropdown(
+                                id='comparison-dropdown',
+                                options=[
+                                    {'label': '<', 'value': '<'},
+                                    {'label': '>', 'value': '>'},
+                                    {'label': 'ALL', 'value': 'ALL'}
+                                ],
+                                value='ALL',
+                                clearable=False,
+                                style={'width': '80px'}
+                            ),
+                            dcc.Input(
+                                id='number-input',
+                                type='number',
+                                min=ratings.min().iloc[0],
+                                max=ratings.max().iloc[0],
+                                value = 3,
+                                style={'marginLeft': '10px', 'width': '60px'}
+                            ),
+                            html.Button('Submit', id='submit-val', n_clicks=0)], style={'display': 'flex', 'alignItems': 'center', 'gap': '10px'}),
                             html.Div([
                                 html.Div([
                                     html.Img(id='pic1', style={'height': '300px'}),
@@ -125,10 +150,21 @@ def update_options5(search_value):
     State('mov2', 'value'),
     State('mov3', 'value'),
     State('mov4', 'value'),
-    State('mov5', 'value'))
+    State('mov5', 'value'),
+    State('comparison-dropdown', 'value'),
+    State('number-input', 'value'))
 
-def print_movies(placeholder, movie1, movie2, movie3, movie4, movie5):
+def print_movies(placeholder, movie1, movie2, movie3, movie4, movie5, compare, rating):
     titles = [movie1, movie2, movie3, movie4, movie5]
+
+    match compare:
+        case 'ALL':
+            rate_index = ratings.index
+        case '<': #less than
+            rate_index = ratings[ratings['mean'] < rating].index
+        case '>': #more than
+            rate_index = ratings[ratings['mean'] > rating].index
+
     ids = list()
     for title in titles:
         if title != None:
@@ -137,7 +173,7 @@ def print_movies(placeholder, movie1, movie2, movie3, movie4, movie5):
             continue
     
     if len(ids) > 0:
-        urls = movie_obj.get_movies(ids)
+        urls = movie_obj.get_movies(ids, rate_index)
     else:
         urls = [None, None, None, None, None]
 
@@ -148,5 +184,3 @@ def print_movies(placeholder, movie1, movie2, movie3, movie4, movie5):
 
 if __name__ == "__main__":
     app.run(debug=True)
-    #print(movie_obj.get_movies([260, 1196]))
-    
