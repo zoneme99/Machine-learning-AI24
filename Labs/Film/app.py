@@ -3,7 +3,8 @@ A sample of 8 of the 26 Bootstrap themed Plotly figure templates available
 in the dash-bootstrap-template library
 
 """
-from dash import Dash, html, dcc, Input, Output, callback
+from dash import Dash, html, dcc, Input, Output, State, callback
+from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
 import plotly.express as px
@@ -35,11 +36,14 @@ load_figure_template(template)
 
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.layout = dbc.Container([dcc.Dropdown(movie_obj.movies['title'], id='mov1'),
-                            dcc.Dropdown(movie_obj.movies['title'], id='mov2'),
-                            dcc.Dropdown(movie_obj.movies['title'], id='mov3'),
-                            dcc.Dropdown(movie_obj.movies['title'], id='mov4'),
-                            dcc.Dropdown(movie_obj.movies['title'], id='mov5'),
+app.layout = dbc.Container([html.H2(children='Submit your favourite movies from 1 to 5 movies!\n AI will recommend movies based of those movies!(Write in dropdown menu to get available movies)',
+                            style={'width': '100%'}),
+                            dcc.Dropdown(id='mov1'),
+                            dcc.Dropdown(id='mov2'),
+                            dcc.Dropdown(id='mov3'),
+                            dcc.Dropdown(id='mov4'),
+                            dcc.Dropdown(id='mov5'),
+                            html.Button('Submit', id='submit-val', n_clicks=0),
                             html.Div([
                                 html.Div([
                                     html.Img(id='pic1', style={'height': '300px'}),
@@ -64,6 +68,46 @@ app.layout = dbc.Container([dcc.Dropdown(movie_obj.movies['title'], id='mov1'),
                             ])
                         ])
 
+@callback(
+    Output("mov1", "options"),
+    Input('mov1', 'search_value')
+)
+def update_options1(search_value):
+    if not search_value:
+        raise PreventUpdate
+    return movie_obj.movies[movie_obj.movies['title'].str.contains(search_value, case=False, na=False)]['title']
+@callback(
+    Output("mov2", "options"),
+    Input('mov2', 'search_value')
+)
+def update_options2(search_value):
+    if not search_value:
+        raise PreventUpdate
+    return movie_obj.movies[movie_obj.movies['title'].str.contains(search_value, case=False, na=False)]['title']
+@callback(
+    Output("mov3", "options"),
+    Input('mov3', 'search_value')
+)
+def update_options3(search_value):
+    if not search_value:
+        raise PreventUpdate
+    return movie_obj.movies[movie_obj.movies['title'].str.contains(search_value, case=False, na=False)]['title']
+@callback(
+    Output("mov4", "options"),
+    Input('mov4', 'search_value')
+)
+def update_options4(search_value):
+    if not search_value:
+        raise PreventUpdate
+    return movie_obj.movies[movie_obj.movies['title'].str.contains(search_value, case=False, na=False)]['title']
+@callback(
+    Output("mov5", "options"),
+    Input('mov5', 'search_value')
+)
+def update_options5(search_value):
+    if not search_value:
+        raise PreventUpdate
+    return movie_obj.movies[movie_obj.movies['title'].str.contains(search_value, case=False, na=False)]['title']
 
 @callback(
     Output('pic1', 'src'),
@@ -76,13 +120,14 @@ app.layout = dbc.Container([dcc.Dropdown(movie_obj.movies['title'], id='mov1'),
     Output('link3', 'href'),
     Output('link4', 'href'),
     Output('link5', 'href'),
-    Input('mov1', 'value'),
-    Input('mov2', 'value'),
-    Input('mov3', 'value'),
-    Input('mov4', 'value'),
-    Input('mov5', 'value'))
+    Input('submit-val', 'n_clicks'),
+    State('mov1', 'value'),
+    State('mov2', 'value'),
+    State('mov3', 'value'),
+    State('mov4', 'value'),
+    State('mov5', 'value'))
 
-def update_graph(movie1, movie2, movie3, movie4, movie5):
+def print_movies(placeholder, movie1, movie2, movie3, movie4, movie5):
     titles = [movie1, movie2, movie3, movie4, movie5]
     ids = list()
     for title in titles:
