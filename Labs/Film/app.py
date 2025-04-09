@@ -1,8 +1,3 @@
-"""
-A sample of 8 of the 26 Bootstrap themed Plotly figure templates available
-in the dash-bootstrap-template library
-
-"""
 from dash import Dash, html, dcc, Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
@@ -17,18 +12,7 @@ links = pd.read_csv('Labs/Film/ml-latest/links.csv', index_col='movieId')
 movie_obj = movie_recommendation(movies_path, tags_path, links)
 ratings = pd.read_csv('Labs/Film/ratings.csv', index_col='movieId')
 
-templates = [
-    "bootstrap",
-    "minty",
-    "pulse",
-    "flatly",
-    "quartz",
-    "cyborg",
-    "darkly",
-    "vapor",
-]
-template = 'pulse'
-load_figure_template(template)
+load_figure_template('pulse')
 app = Dash(__name__, external_stylesheets=[dbc.themes.PULSE])
 
 #Layout för appen
