@@ -37,7 +37,7 @@ class movie_recommendation:
         tag_vector = vector.fit_transform(all_tags)
         return tag_vector, all_tags.index, movies
 
-
+    #Översätter antingen mellan movieId till indexrow i TF-IDF vektormatrisen eller om get_link=True översätter den indexrow till movieID till url-länk
     def translate(self, index, id, links, get_link=False):
         if get_link:
             urlnum = str(links['imdbId'][index[id]])
@@ -49,18 +49,19 @@ class movie_recommendation:
             return index.get_loc(id)
 
     def recommend_movies(self, tag_vector, index, movie_id, links, rate_index):
+        #Om movie_id som ska vara en lista är fler än 1 filmer körs detta, else körs endast för 1 film
         if len(movie_id) > 1:
             matrix_index = self.translate(index, movie_id[0], links)
             serie = pd.Series(euclidean_distances(tag_vector, tag_vector.getrow(matrix_index)).reshape(-1))
             for id in movie_id[1:]:
                 matrix_index = self.translate(index, id, links)
                 tmp = pd.Series(euclidean_distances(tag_vector, tag_vector.getrow(matrix_index)).reshape(-1))
-                serie = serie + tmp
+                serie = serie + tmp # Summerar distansen mellan alla filmer och tar sedan kortast distansen (sort_values(ascending=True))
             matrix_index = list()
             for id in movie_id:
                 matrix_index.append(self.translate(index, id, links))
-            serie.drop(index=matrix_index, inplace=True)
-            serie = serie[serie.index.isin([index.get_loc(x) for x in rate_index])]
+            serie.drop(index=matrix_index, inplace=True) # Tar bort alla givna filmer, annars skulle dessa rekommenderas
+            serie = serie[serie.index.isin([index.get_loc(x) for x in rate_index])] #Filtreringen för alla filmer given viss omdöme
             serie = serie.sort_values(ascending=True)
             recommended_movies = serie.iloc[:6]
             
@@ -75,18 +76,19 @@ class movie_recommendation:
         urls = list()
         for id in recommended_movies.index:
             urls.append(self.translate(index, id, links, get_link=True))
-        while len(urls) < 5:
+        while len(urls) < 5: #Om rate_index filtrerar bort så att det blir färre än 5 filmer, fyller den ut urls listan med Nones
             urls.append(None)
         return urls
     
+    #Har redan körts, output är ratings.csv vilket är bantad efter filmer med tags och som har fler omdömen. Detta för att undvika ladda in originalfilen som var enorm.
     def create_ratings(self, path):
         ratings = pd.read_csv(path)
         ratings = ratings.groupby('movieId')['rating'].agg(['count', 'mean'])
-        ratings = ratings[ratings['count'] > 25] #Ta bort avvikelser, tex. 1 review som ger 5.0 rating
+        ratings = ratings[ratings['count'] > 25] #Ta bort avvikelser, tex. 1 review som ger 5.0 rating, alltså endast filmer med över 25 omdömen
         ratings = ratings[ratings.index.isin(self.index)]
         ratings['mean'].to_csv('Labs/Film/ratings.csv')
 
-
+#Lite enkel scraping för att få tag i filmomslaget
 def get_imdb_image(url):
     if url == None:
         return url
@@ -103,6 +105,7 @@ def get_imdb_image(url):
         
     return img['src']
 
+#Om man behöver generera ratings.csv igen. Dock måste ml-latest laddas ner manuellt vilket är ett krav för att köra appen
 if __name__ == "__main__":
     movies_path = 'Labs/Film/ml-latest/movies.csv'
     tags_path = 'Labs/Film/ml-latest/tags.csv'

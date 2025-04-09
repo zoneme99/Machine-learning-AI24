@@ -7,7 +7,6 @@ from dash import Dash, html, dcc, Input, Output, State, callback
 from dash.exceptions import PreventUpdate
 import dash_bootstrap_components as dbc
 from dash_bootstrap_templates import load_figure_template
-import plotly.express as px
 from movie_class import movie_recommendation, get_imdb_image
 import pandas as pd
 
@@ -29,12 +28,10 @@ templates = [
     "vapor",
 ]
 template = 'pulse'
-
 load_figure_template(template)
+app = Dash(__name__, external_stylesheets=[dbc.themes.PULSE])
 
-
-
-app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+#Layout för appen
 app.layout = dbc.Container([dcc.Markdown(f'''
                                          # Submit your favourite movies from 1 to 5 movies!
                                          
@@ -93,6 +90,8 @@ app.layout = dbc.Container([dcc.Markdown(f'''
                             ])
                         ])
 
+#Har callback-funktioner för varje searchbar. Anledningen är pga optimering. Att ladda in alla alternativ i alla searchbars var beräkningstungt.
+#Därför uppdateras valen utefter vad du skriver in vilket minskar antalet alternativ drastiskt.
 @callback(
     Output("mov1", "options"),
     Input('mov1', 'search_value')
@@ -134,6 +133,7 @@ def update_options5(search_value):
         raise PreventUpdate
     return movie_obj.movies[movie_obj.movies['title'].str.contains(search_value, case=False, na=False)]['title']
 
+#En input button med State-data från filmtitlar och rating-värden, output: bilder och länkar
 @callback(
     Output('pic1', 'src'),
     Output('pic2', 'src'),
@@ -157,6 +157,7 @@ def update_options5(search_value):
 def print_movies(placeholder, movie1, movie2, movie3, movie4, movie5, compare, rating):
     titles = [movie1, movie2, movie3, movie4, movie5]
 
+    #Enkel switch som filtrerar ratings.index
     match compare:
         case 'ALL':
             rate_index = ratings.index
@@ -166,21 +167,23 @@ def print_movies(placeholder, movie1, movie2, movie3, movie4, movie5, compare, r
             rate_index = ratings[ratings['mean'] > rating].index
 
     ids = list()
+    #Omvandlar titlar till movieId, hoppar över om det är ett None värde
     for title in titles:
         if title != None:
             ids.append(movie_obj.movies[movie_obj.movies['title'] == title].index[0])
         else:
             continue
     
+    #Kollar att ids är inte är tom, annars spottar den ut en tom lista
     if len(ids) > 0:
         urls = movie_obj.get_movies(ids, rate_index)
     else:
         urls = [None, None, None, None, None]
 
         
-
+    #Returnerar alla bilder och länkar
     return get_imdb_image(urls[0]), get_imdb_image(urls[1]), get_imdb_image(urls[2]), get_imdb_image(urls[3]), get_imdb_image(urls[4]), urls[0], urls[1], urls[2], urls[3], urls[4]
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
